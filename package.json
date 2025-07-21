@@ -1,0 +1,31 @@
+{
+  "name": "audio-separator-app",
+  "version": "1.0.0",
+  "description": "A backend server for separating vocals and instrumental tracks from audio files using Demucs",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ImSD-CLOUD/audio-separator-app.git "
+  },
+  "keywords": [
+    "audio-separation",
+    "vocal-removal",
+    "demucs",
+    "nodejs",
+    "express"
+  ],
+  "author": "Swarup Das",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ImSD-CLOUD/audio-separator-app/issues "
+  },
+  "homepage": "https://github.com/ImSD-CLOUD/audio-separator-app #readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "multer": "^2.0.0"
+  }
+}
