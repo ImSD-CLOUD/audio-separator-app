@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const API_BASE = 'https://audio-separator-backend.onrender.com';
+
 function App() {
   const [file, setFile] = useState(null);
   const [vocalUrl, setVocalUrl] = useState('');
@@ -8,7 +10,6 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    // Inject @keyframes safely
     const style = document.createElement('style');
     style.innerHTML = `
       @keyframes progress {
@@ -29,25 +30,23 @@ function App() {
 
     const formData = new FormData();
     formData.append('audio', file);
-
     setIsProcessing(true);
+    setVocalUrl('');
+    setInstrumentalUrl('');
 
     try {
-      const response = await axios.post(
-        'https://audio-separator-backend.onrender.com/upload',
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }
-      );
+      const response = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
-      setVocalUrl(`https://audio-separator-backend.onrender.com${response.data.vocalUrl}`);
-      setInstrumentalUrl(`https://audio-separator-backend.onrender.com${response.data.instrumentalUrl}`);
+      setVocalUrl(`${API_BASE}${response.data.vocalUrl}`);
+      setInstrumentalUrl(`${API_BASE}${response.data.instrumentalUrl}`);
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to separate audio. Please try again.');
+      alert('Something went wrong during audio separation. Please try again later.');
     } finally {
       setIsProcessing(false);
+      setFile(null); // Clear file input
     }
   };
 
@@ -56,7 +55,12 @@ function App() {
       <h1 style={styles.title}>Audio Separator</h1>
       <p style={styles.subtitle}>Separate vocals and instrumentals from any song!</p>
 
-      <input type="file" accept="audio/*" onChange={handleFileChange} style={styles.fileInput} />
+      <input
+        type="file"
+        accept="audio/*"
+        onChange={handleFileChange}
+        style={styles.fileInput}
+      />
 
       <button
         onClick={handleSubmit}
@@ -105,29 +109,26 @@ function App() {
 const styles = {
   container: {
     textAlign: 'center',
-    padding: '40px',
+    padding: '40px 20px',
     backgroundColor: '#121212',
     color: 'white',
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
-    fontFamily: 'Arial, sans-serif'
+    fontFamily: 'Arial, sans-serif',
   },
   title: {
     fontSize: '2.5rem',
     fontWeight: 'bold',
-    margin: '0',
     background: 'linear-gradient(to right, #764ba2, #667eea)',
     WebkitBackgroundClip: 'text',
     color: 'transparent',
-    textTransform: 'none'
   },
   subtitle: {
-    fontSize: '1.2rem',
+    fontSize: '1.1rem',
     color: '#ccc',
-    marginBottom: '20px'
+    marginBottom: '20px',
   },
   fileInput: {
     padding: '10px',
@@ -138,7 +139,7 @@ const styles = {
     border: '1px solid #ccc',
     borderRadius: '5px',
     backgroundColor: '#1f1f1f',
-    color: 'white'
+    color: 'white',
   },
   button: {
     padding: '10px 20px',
@@ -148,11 +149,11 @@ const styles = {
     color: 'white',
     border: 'none',
     borderRadius: '5px',
-    transition: 'background-color 0.3s ease'
+    transition: 'background-color 0.3s ease',
   },
   buttonDisabled: {
     backgroundColor: '#6c757d',
-    cursor: 'not-allowed'
+    cursor: 'not-allowed',
   },
   progressBarContainer: {
     marginTop: '20px',
@@ -161,36 +162,36 @@ const styles = {
     height: '10px',
     backgroundColor: '#333',
     borderRadius: '5px',
-    overflow: 'hidden'
+    overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
     width: '100%',
     background: 'linear-gradient(90deg, #667eea, #764ba2)',
-    animation: 'progress 1.5s linear infinite'
+    animation: 'progress 1.5s linear infinite',
   },
   results: {
     marginTop: '40px',
     width: '100%',
     maxWidth: '600px',
-    margin: 'auto'
   },
   sectionTitle: {
-    fontSize: '2rem',
-    marginBottom: '20px'
+    fontSize: '1.8rem',
+    marginBottom: '20px',
   },
   trackContainer: {
-    marginBottom: '30px'
+    marginBottom: '30px',
   },
   audio: {
     width: '100%',
-    maxWidth: '100%'
+    maxWidth: '100%',
   },
   downloadLink: {
     color: '#00ffff',
     textDecoration: 'none',
-    fontWeight: 'bold'
-  }
+    fontWeight: 'bold',
+  },
 };
 
 export default App;
+
