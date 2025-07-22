@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function App() {
@@ -6,6 +6,19 @@ function App() {
   const [vocalUrl, setVocalUrl] = useState('');
   const [instrumentalUrl, setInstrumentalUrl] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    // Inject @keyframes safely
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes progress {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -20,12 +33,16 @@ function App() {
     setIsProcessing(true);
 
     try {
-      await axios.post('http://localhost:3000/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await axios.post(
+        'https://audio-separator-backend.onrender.com/upload',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
 
-      setVocalUrl('http://localhost:3000/output/vocals.mp3');
-      setInstrumentalUrl('http://localhost:3000/output/instrumental.mp3');
+      setVocalUrl(`https://audio-separator-backend.onrender.com${response.data.vocalUrl}`);
+      setInstrumentalUrl(`https://audio-separator-backend.onrender.com${response.data.instrumentalUrl}`);
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to separate audio. Please try again.');
@@ -144,13 +161,13 @@ const styles = {
     height: '10px',
     backgroundColor: '#333',
     borderRadius: '5px',
-    overflow: 'hidden',
+    overflow: 'hidden'
   },
   progressBar: {
     height: '100%',
     width: '100%',
     background: 'linear-gradient(90deg, #667eea, #764ba2)',
-    animation: 'progress 2s linear infinite'
+    animation: 'progress 1.5s linear infinite'
   },
   results: {
     marginTop: '40px',
@@ -175,14 +192,5 @@ const styles = {
     fontWeight: 'bold'
   }
 };
-
-// Add keyframes for progress bar animation
-const styleSheet = document.styleSheets[0];
-const keyframes =
-  `@keyframes progress {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }`;
-styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
 
 export default App;
