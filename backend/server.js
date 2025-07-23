@@ -8,28 +8,25 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-
 // ✅ Enable CORS
 app.use(cors());
 
-// Middleware to parse incoming files
-const upload = multer({ dest: 'uploads/' });
+// ✅ Multer for file uploads
+const upload = multer({ dest: path.resolve(__dirname, '../uploads') });
 
-// Route to handle file uploads
+// ✅ POST route to upload file and trigger Demucs
 app.post('/upload', upload.single('audio'), async (req, res) => {
   try {
     const inputPath = req.file.path;
-    const outputPath = path.resolve(__dirname, '../output'); // Absolute path
+    const outputPath = path.resolve(__dirname, '../output');
 
     console.log(`Input Path: ${inputPath}`);
     console.log(`Output Path: ${outputPath}`);
 
-    // Ensure output directory exists
     if (!fs.existsSync(outputPath)) {
       fs.mkdirSync(outputPath, { recursive: true });
     }
 
-    // Call the Python script
     await separateAudio(inputPath, outputPath);
 
     res.json({
@@ -43,14 +40,12 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
   }
 });
 
-// Function to separate audio using Demucs
+// ✅ Function to run Python script
 async function separateAudio(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
-    const pythonProcess = spawn('python', [
-      path.join(__dirname, '../demucs_separate.py'),
-      inputPath,
-      outputPath
-    ]);
+    const pythonScript = path.resolve(__dirname, '../demucs_separate.py');
+
+    const pythonProcess = spawn('python', [pythonScript, inputPath, outputPath]);
 
     pythonProcess.stdout.on('data', (data) => {
       console.log(`Python stdout: ${data}`);
@@ -72,7 +67,7 @@ async function separateAudio(inputPath, outputPath) {
   });
 }
 
-// ✅ Secure download route (handles file existence and avoids header crash)
+// ✅ Route to download processed files
 app.get('/output/:filename', (req, res) => {
   const filePath = path.resolve(__dirname, '../output', req.params.filename);
 
@@ -86,14 +81,14 @@ app.get('/output/:filename', (req, res) => {
       if (err) {
         console.error('Download error:', err);
         if (!res.headersSent) {
-          return res.status(500).send('Failed to download file');
+          res.status(500).send('Failed to download file');
         }
       }
     });
   });
 });
 
-// Start the server
+// ✅ Start server
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${port}`);
 });
