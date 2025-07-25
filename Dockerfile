@@ -3,7 +3,7 @@ FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PORT=3000
+ENV PORT=8080
 
 # Set working directory
 WORKDIR /app
@@ -34,7 +34,7 @@ WORKDIR /app
 RUN mkdir -p uploads output
 
 # Expose port
-EXPOSE 3000
+EXPOSE 8080
 
 # Start server
 CMD ["node", "backend/server.js"]
