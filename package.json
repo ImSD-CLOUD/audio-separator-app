@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ImSD-CLOUD/audio-separator-app.git "
+    "url": "https://github.com/ImSD-CLOUD/audio-separator-app.git"
   },
   "keywords": [
     "audio-separation",
@@ -20,9 +20,9 @@
   "author": "Swarup Das",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ImSD-CLOUD/audio-separator-app/issues "
+    "url": "https://github.com/ImSD-CLOUD/audio-separator-app/issues"
   },
-  "homepage": "https://github.com/ImSD-CLOUD/audio-separator-app #readme",
+  "homepage": "https://github.com/ImSD-CLOUD/audio-separator-app#readme",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
