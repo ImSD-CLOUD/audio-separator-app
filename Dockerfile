@@ -1,37 +1,39 @@
-# Stage 1: Base image
+# Use a slim Python base image (includes Python + pip)
 FROM python:3.10-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PORT=3000
 
 # Set working directory
 WORKDIR /app
 
-# Install Node.js, FFmpeg, and other system dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-  nodejs npm ffmpeg git curl build-essential \
+  nodejs \
+  npm \
+  ffmpeg \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy Python files
+# Copy root-level files
 COPY requirements.txt ./
-COPY demucs_separate.py ./
+COPY demucs_separate.py ./  # Copy to /app (root)
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Prepare backend (Node.js)
+# Copy backend
 WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
 COPY backend ./
 
-# Go back to root dir
-WORKDIR /app
-
-# Create output and uploads folder
-RUN mkdir -p output uploads
+# Create persistent folders
+RUN mkdir -p /app/uploads /app/output
 
 # Expose port
-ENV PORT=3000
 EXPOSE 3000
 
-# Start backend
-CMD ["node", "backend/server.js"]
+# Start server
+CMD ["node", "server.js"]
