@@ -13,27 +13,30 @@ RUN apt-get update && apt-get install -y \
   nodejs \
   npm \
   ffmpeg \
+  git \
+  build-essential \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy root-level files
 COPY requirements.txt ./
-COPY demucs_separate.py ./  # Copy to /app (root)
+COPY demucs_separate.py ./
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend
+# Copy and install Node.js backend dependencies
 WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
-COPY backend ./
+COPY backend ./  # Copy all backend files including server.js
 
-# Create persistent folders
-RUN mkdir -p /app/uploads /app/output
+# Create output and uploads folders
+WORKDIR /app
+RUN mkdir -p uploads output
 
-# Expose port
+# Expose the backend port
 EXPOSE 3000
 
-# Start server
-CMD ["node", "server.js"]
+# Start backend server
+CMD ["node", "backend/server.js"]
