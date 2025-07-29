@@ -25,7 +25,7 @@ def separate_audio(input_path, output_dir):
     cmd = [
         "demucs",
         "--two-stems", "vocals",
-        "-n", "demucs_quantized",  # ✅ Lighter model for Railway
+        "-n", "htdemucs_ft",  # ✅ Lighter model for Railway
         "-o", output_dir,
         input_path
     ]
@@ -41,7 +41,7 @@ def separate_audio(input_path, output_dir):
     print("Separation completed by Demucs.")
 
     filename_without_ext = os.path.splitext(os.path.basename(input_path))[0]
-    separated_files_base_dir = os.path.join(output_dir, "demucs_quantized", filename_without_ext)
+    separated_files_base_dir = os.path.join(output_dir, "htdemucs_ft", filename_without_ext)
 
     vocals_path = os.path.join(separated_files_base_dir, "vocals.wav")
     instrumental_path = os.path.join(separated_files_base_dir, "accompaniment.wav")
