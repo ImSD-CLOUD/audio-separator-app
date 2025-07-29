@@ -17,17 +17,15 @@ def sanitize_filename(filepath):
 def separate_audio(input_path, output_dir):
     input_path, was_copied = sanitize_filename(input_path)
 
-    # Ensure absolute paths
     output_dir = os.path.abspath(output_dir)
-
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # ✅ FIXED: Use correct model argument `-n` instead of `--model`
+    # ✅ Use the lighter model
     cmd = [
         "demucs",
         "--two-stems", "vocals",
-        "-n", "htdemucs",  # ✅ Correct flag for model name
+        "--model", "demucs_quantized",  # ✅ Lighter model for Railway
         "-o", output_dir,
         input_path
     ]
@@ -43,7 +41,7 @@ def separate_audio(input_path, output_dir):
     print("Separation completed by Demucs.")
 
     filename_without_ext = os.path.splitext(os.path.basename(input_path))[0]
-    separated_files_base_dir = os.path.join(output_dir, "htdemucs", filename_without_ext)
+    separated_files_base_dir = os.path.join(output_dir, "demucs_quantized", filename_without_ext)
 
     vocals_path = os.path.join(separated_files_base_dir, "vocals.wav")
     instrumental_path = os.path.join(separated_files_base_dir, "accompaniment.wav")
@@ -63,7 +61,6 @@ def separate_audio(input_path, output_dir):
     else:
         raise FileNotFoundError(f"Instrumental WAV file not found: {instrumental_path}")
 
-    # Cleanup temporary file if copied
     if was_copied:
         os.remove(input_path)
         print(f"Deleted temporary sanitized file: {input_path}")
