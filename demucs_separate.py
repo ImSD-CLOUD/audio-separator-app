@@ -23,11 +23,11 @@ def separate_audio(input_path, output_dir):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # Run Demucs command
+    # ✅ FIXED: Use correct model argument `-n` instead of `--model`
     cmd = [
         "demucs",
-        "--two-stems=vocals",
-        "--model", "htdemucs",  # Use --model instead of -n
+        "--two-stems", "vocals",
+        "-n", "htdemucs",  # ✅ Correct flag for model name
         "-o", output_dir,
         input_path
     ]
@@ -46,7 +46,7 @@ def separate_audio(input_path, output_dir):
     separated_files_base_dir = os.path.join(output_dir, "htdemucs", filename_without_ext)
 
     vocals_path = os.path.join(separated_files_base_dir, "vocals.wav")
-    instrumental_path = os.path.join(separated_files_base_dir, "accompaniment.wav")  # ✅ Fixed: was "no_vocals.wav"
+    instrumental_path = os.path.join(separated_files_base_dir, "accompaniment.wav")
 
     final_vocals_mp3 = os.path.join(output_dir, "vocals.mp3")
     final_instrumental_mp3 = os.path.join(output_dir, "instrumental.mp3")
