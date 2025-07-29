@@ -25,7 +25,7 @@ def separate_audio(input_path, output_dir):
     cmd = [
         "demucs",
         "--two-stems", "vocals",
-        "--model", "demucs_quantized",  # ✅ Lighter model for Railway
+        "-n", "demucs_quantized",  # ✅ Lighter model for Railway
         "-o", output_dir,
         input_path
     ]
