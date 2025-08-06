@@ -1,5 +1,3 @@
-// netlify/functions/separate-audio.mjs
-
 import fetch from 'node-fetch';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -9,7 +7,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-export async function handler(event) {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -27,6 +25,7 @@ export async function handler(event) {
       };
     }
 
+    // 🔁 Trigger Replicate API with split option
     const replicateRes = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -37,40 +36,49 @@ export async function handler(event) {
         version: model,
         input: {
           audio: fileUrl,
-          split: "vocals"
+          split: "vocals"  // ✅ Only return vocals + instrumental
         }
       })
     });
 
     const replicateData = await replicateRes.json();
 
-    if (replicateData.error) {
-      throw new Error(replicateData.error);
+    // ✅ Check for errors in Replicate response
+    if (!replicateRes.ok || !replicateData?.urls?.get) {
+      console.error('❌ Replicate API Error Response:', replicateData);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: replicateData.error || 'Replicate API failed or returned invalid response.'
+        })
+      };
     }
 
-    const predictionUrl = replicateData.urls.get;
+    // 🕒 Wait for processing to complete
     let prediction;
-
+    const predictionUrl = replicateData.urls.get;
     while (true) {
       const pollRes = await fetch(predictionUrl, {
-        headers: {
-          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`
-        }
+        headers: { 'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}` }
       });
-
       prediction = await pollRes.json();
 
       if (prediction.status === 'succeeded' || prediction.status === 'failed') {
         break;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before polling again
     }
 
     if (prediction.status !== 'succeeded') {
-      throw new Error('Replicate prediction failed');
+      console.error('❌ Replicate prediction failed:', prediction);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Replicate prediction failed' })
+      };
     }
 
+    // 🎵 Upload both files to Cloudinary
     const [vocalUrl, instrumentalUrl] = prediction.output;
 
     const uploadedVocal = await cloudinary.uploader.upload(vocalUrl, { folder: 'audio-separator' });
@@ -84,10 +92,10 @@ export async function handler(event) {
       })
     };
   } catch (error) {
-    console.error('Function error:', error);
+    console.error('❌ Function error:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Audio separation failed.' })
     };
   }
-}
+};
