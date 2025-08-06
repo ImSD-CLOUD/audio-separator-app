@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_BASE = 'https://audio-separator-backend.onrender.com';
+const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/dbbpripma/auto/upload';
+const CLOUDINARY_UPLOAD_PRESET = 'ml_default';
+
+const getFunctionURL = () => {
+  // In local dev: use relative path
+  if (process.env.NODE_ENV === 'development') {
+    return '/.netlify/functions/separate-audio';
+  }
+
+  // In production: absolute URL (replace with your Netlify site name)
+  return 'https://audio-separator-app.netlify.app/.netlify/functions/separate-audio';
+};
 
 function App() {
   const [file, setFile] = useState(null);
@@ -28,25 +39,34 @@ function App() {
   const handleSubmit = async () => {
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('audio', file);
     setIsProcessing(true);
     setVocalUrl('');
     setInstrumentalUrl('');
 
     try {
-      const response = await axios.post(`${API_BASE}/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // 1. Upload to Cloudinary
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const cloudinaryRes = await axios.post(CLOUDINARY_UPLOAD_URL, formData);
+      const uploadedUrl = cloudinaryRes.data.secure_url;
+
+      // 2. Call Netlify Function
+      const functionResponse = await axios.post(getFunctionURL(), {
+        fileUrl: uploadedUrl,
+        model: '5a7041cc9b82e5a558fea6b3d7b12dea89625e89da33f0447bd727c2d0ab9e77'
       });
 
-      setVocalUrl(`${API_BASE}${response.data.vocalUrl}`);
-      setInstrumentalUrl(`${API_BASE}${response.data.instrumentalUrl}`);
+      const { vocal, instrumental } = functionResponse.data;
+      setVocalUrl(vocal);
+      setInstrumentalUrl(instrumental);
     } catch (error) {
-      console.error('Upload error:', error);
-      alert('Something went wrong during audio separation. Please try again later.');
+      console.error('Separation error:', error);
+      alert('Something went wrong. Please try again.');
     } finally {
       setIsProcessing(false);
-      setFile(null); // Clear file input
+      setFile(null);
     }
   };
 
@@ -55,20 +75,12 @@ function App() {
       <h1 style={styles.title}>Audio Separator</h1>
       <p style={styles.subtitle}>Separate vocals and instrumentals from any song!</p>
 
-      <input
-        type="file"
-        accept="audio/*"
-        onChange={handleFileChange}
-        style={styles.fileInput}
-      />
+      <input type="file" accept="audio/*" onChange={handleFileChange} style={styles.fileInput} />
 
       <button
         onClick={handleSubmit}
         disabled={!file || isProcessing}
-        style={{
-          ...styles.button,
-          ...(isProcessing ? styles.buttonDisabled : {})
-        }}
+        style={{ ...styles.button, ...(isProcessing ? styles.buttonDisabled : {}) }}
       >
         {isProcessing ? 'Processing...' : 'Separate Audio'}
       </button>
@@ -87,18 +99,14 @@ function App() {
             <h3>Vocals</h3>
             <audio src={vocalUrl} controls style={styles.audio}></audio>
             <br />
-            <a href={vocalUrl} download style={styles.downloadLink}>
-              Download Vocals Track
-            </a>
+            <a href={vocalUrl} download style={styles.downloadLink}>Download Vocals Track</a>
           </div>
 
           <div style={styles.trackContainer}>
             <h3>Instrumental</h3>
             <audio src={instrumentalUrl} controls style={styles.audio}></audio>
             <br />
-            <a href={instrumentalUrl} download style={styles.downloadLink}>
-              Download Instrumental Track
-            </a>
+            <a href={instrumentalUrl} download style={styles.downloadLink}>Download Instrumental Track</a>
           </div>
         </div>
       )}
@@ -194,4 +202,3 @@ const styles = {
 };
 
 export default App;
-

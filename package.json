@@ -24,8 +24,7 @@
   },
   "homepage": "https://github.com/ImSD-CLOUD/audio-separator-app#readme",
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "multer": "^2.0.0"
+    "cloudinary": "^2.7.0",
+    "node-fetch": "^3.3.2"
   }
 }
