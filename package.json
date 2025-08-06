@@ -1,6 +1,7 @@
 {
   "name": "audio-separator-app",
   "version": "1.0.0",
+  "type": "module",
   "description": "A backend server for separating vocals and instrumental tracks from audio files using Demucs",
   "main": "backend/server.js",
   "scripts": {

@@ -1,5 +1,7 @@
-const fetch = require('node-fetch');
-const cloudinary = require('cloudinary').v2;
+// netlify/functions/separate-audio.mjs
+
+import fetch from 'node-fetch';
+import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -7,7 +9,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-exports.handler = async (event) => {
+export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -25,7 +27,6 @@ exports.handler = async (event) => {
       };
     }
 
-    // 🔁 Trigger Replicate API with split option
     const replicateRes = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -36,7 +37,7 @@ exports.handler = async (event) => {
         version: model,
         input: {
           audio: fileUrl,
-          split: "vocals"  // ✅ Only return vocals + instrumental
+          split: "vocals"
         }
       })
     });
@@ -47,13 +48,16 @@ exports.handler = async (event) => {
       throw new Error(replicateData.error);
     }
 
-    // 🕒 Wait for processing to complete
-    let prediction;
     const predictionUrl = replicateData.urls.get;
+    let prediction;
+
     while (true) {
       const pollRes = await fetch(predictionUrl, {
-        headers: { 'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}` }
+        headers: {
+          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`
+        }
       });
+
       prediction = await pollRes.json();
 
       if (prediction.status === 'succeeded' || prediction.status === 'failed') {
@@ -67,7 +71,6 @@ exports.handler = async (event) => {
       throw new Error('Replicate prediction failed');
     }
 
-    // 🎵 Upload both files to Cloudinary
     const [vocalUrl, instrumentalUrl] = prediction.output;
 
     const uploadedVocal = await cloudinary.uploader.upload(vocalUrl, { folder: 'audio-separator' });
@@ -87,4 +90,4 @@ exports.handler = async (event) => {
       body: JSON.stringify({ error: 'Audio separation failed.' })
     };
   }
-};
+}
