@@ -1,5 +1,5 @@
 [build]
-  base = "."  # <- root directory
-  command = "npm run build --prefix frontend"
+  base = "."  # keep this at root
+  command = "cd frontend && npm install && npm run build"
   publish = "frontend/build"
   functions = "netlify/functions"
